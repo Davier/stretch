@@ -59,7 +59,7 @@ struct FlexLine {
 }
 
 impl Forest {
-    pub(crate) fn compute(&mut self, root: NodeId, size: Size<Number>) -> Result<(), Box<Any>> {
+    pub(crate) fn compute(&mut self, root: NodeId, size: Size<Number>) -> Result<(), Box<dyn Any>> {
         let style = self.nodes[root].style;
         let has_root_min_max = style.min_size.width.is_defined()
             || style.min_size.height.is_defined()
@@ -144,7 +144,7 @@ impl Forest {
         parent_size: Size<Number>,
         perform_layout: bool,
         main_size: bool,
-    ) -> Result<ComputeResult, Box<Any>> {
+    ) -> Result<ComputeResult, Box<dyn Any>> {
         self.nodes[node].is_dirty = false;
 
         // First we check if we have a result for the given input
@@ -288,7 +288,7 @@ impl Forest {
 
         // TODO - this does not follow spec. See commented out code below
         // 3. Determine the flex base size and hypothetical main size of each item:
-        flex_items.iter_mut().try_for_each(|child| -> Result<(), Box<Any>> {
+        flex_items.iter_mut().try_for_each(|child| -> Result<(), Box<dyn Any>> {
             let child_style = self.nodes[child.node].style;
 
             // A. If the item has a definite used flex basis, that’s the flex base size.
@@ -376,7 +376,7 @@ impl Forest {
         // The hypothetical main size is the item’s flex base size clamped according to its
         // used min and max main sizes (and flooring the content box size at zero).
 
-        flex_items.iter_mut().try_for_each(|child| -> Result<(), Box<Any>> {
+        flex_items.iter_mut().try_for_each(|child| -> Result<(), Box<dyn Any>> {
             child.inner_flex_basis = child.flex_basis - child.padding.main(dir) - child.border.main(dir);
 
             // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
@@ -453,7 +453,7 @@ impl Forest {
         //
         // 9.7. Resolving Flexible Lengths
 
-        flex_lines.iter_mut().try_for_each(|line| -> Result<(), Box<Any>> {
+        flex_lines.iter_mut().try_for_each(|line| -> Result<(), Box<dyn Any>> {
             // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
             //    items on the line. If the sum is less than the flex container’s inner main size,
             //    use the flex grow factor for the rest of this algorithm; otherwise, use the
@@ -470,7 +470,7 @@ impl Forest {
             //    - If using the flex shrink factor: any item that has a flex base size
             //      smaller than its hypothetical main size
 
-            line.items.iter_mut().try_for_each(|child| -> Result<(), Box<Any>> {
+            line.items.iter_mut().try_for_each(|child| -> Result<(), Box<dyn Any>> {
                 // TODO - This is not found by reading the spec. Maybe this can be done in some other place
                 // instead. This was found by trail and error fixing tests to align with webkit output.
                 if node_inner_size.main(dir).is_undefined() && is_row {
@@ -629,7 +629,7 @@ impl Forest {
                 //    item’s target main size was made smaller by this, it’s a max violation.
                 //    If the item’s target main size was made larger by this, it’s a min violation.
 
-                let total_violation = unfrozen.iter_mut().try_fold(0.0, |acc, child| -> Result<f32, Box<Any>> {
+                let total_violation = unfrozen.iter_mut().try_fold(0.0, |acc, child| -> Result<f32, Box<dyn Any>> {
                     // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
                     // The following logic was developed not from the spec but by trail and error looking into how
                     // webkit handled various scenarios. Can probably be solved better by passing in
@@ -707,7 +707,7 @@ impl Forest {
         //    used main size and the available space, treating auto as fit-content.
 
         flex_lines.iter_mut().try_for_each(|line| {
-            line.items.iter_mut().try_for_each(|child| -> Result<(), Box<Any>> {
+            line.items.iter_mut().try_for_each(|child| -> Result<(), Box<dyn Any>> {
                 let child_cross =
                     child.size.cross(dir).maybe_max(child.min_size.cross(dir)).maybe_min(child.max_size.cross(dir));
 
@@ -754,7 +754,7 @@ impl Forest {
 
         if has_baseline_child {
             flex_lines.iter_mut().try_for_each(|line| {
-                line.items.iter_mut().try_for_each(|child| -> Result<(), Box<Any>> {
+                line.items.iter_mut().try_for_each(|child| -> Result<(), Box<dyn Any>> {
                     let result = self.compute_internal(
                         child.node,
                         Size {
@@ -1166,12 +1166,12 @@ impl Forest {
             let mut lines: Vec<Vec<result::Layout>> = vec![];
             let mut total_offset_cross = padding_border.cross_start(dir);
 
-            let layout_line = |line: &mut FlexLine| -> Result<(), Box<Any>> {
+            let layout_line = |line: &mut FlexLine| -> Result<(), Box<dyn Any>> {
                 let mut children: Vec<result::Layout> = vec![];
                 let mut total_offset_main = padding_border.main_start(dir);
                 let line_offset_cross = line.offset_cross;
 
-                let layout_item = |child: &mut FlexItem| -> Result<(), Box<Any>> {
+                let layout_item = |child: &mut FlexItem| -> Result<(), Box<dyn Any>> {
                     let result = self.compute_internal(
                         child.node,
                         child.target_size.map(|s| s.to_number()),

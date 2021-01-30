@@ -15,7 +15,7 @@ use crate::result::Layout;
 use crate::style::*;
 use crate::Error;
 
-pub type MeasureFunc = Box<Fn(Size<Number>) -> Result<Size<f32>, Box<Any>>>;
+pub type MeasureFunc = Box<dyn Fn(Size<Number>) -> Result<Size<f32>, Box<dyn Any>>>;
 
 lazy_static! {
     /// Global stretch instance id allocator.
