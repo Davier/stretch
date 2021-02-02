@@ -709,7 +709,7 @@ impl Forest {
         flex_lines.iter_mut().try_for_each(|line| {
             line.items.iter_mut().try_for_each(|child| -> Result<(), Box<dyn Any>> {
 
-                let child_cross = if let Some(val) = self.cache(child.node, false).as_ref().and_then(|layout_cache| {
+                let child_cross = if let Some(val) = self.cache(child.node, true).as_ref().and_then(|layout_cache| {
                     match layout_cache.node_size.cross(dir) {
                         Defined(val) => {Some(val)}
                         Undefined => {None}
@@ -730,7 +730,7 @@ impl Forest {
                             height: if is_row { available_space.height } else { container_size.main(dir).to_number() },
                         },
                         false,
-                        false,
+                        true,
                     )?
                     .size.cross(dir)
                 }
@@ -780,7 +780,7 @@ impl Forest {
                             height: if is_row { node_size.height } else { container_size.height.to_number() },
                         },
                         true,
-                        false
+                        true
                     )?;
 
                     child.baseline = calc_baseline(
@@ -1183,7 +1183,7 @@ impl Forest {
                         child.target_size.map(|s| s.to_number()),
                         container_size.map(|s| s.to_number()),
                         true,
-                        false,
+                        true,
                     )?;
 
                     let offset_main = total_offset_main
@@ -1292,7 +1292,7 @@ impl Forest {
                     Size { width, height },
                     Size { width: container_width, height: container_height },
                     true, 
-                    false,
+                    true,
                 )?;
 
                 let free_main_space = container_size.main(dir)
