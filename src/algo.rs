@@ -708,11 +708,17 @@ impl Forest {
 
         flex_lines.iter_mut().try_for_each(|line| {
             line.items.iter_mut().try_for_each(|child| -> Result<(), Box<dyn Any>> {
-                let child_cross =
-                    child.size.cross(dir).maybe_max(child.min_size.cross(dir)).maybe_min(child.max_size.cross(dir));
 
-                child.hypothetical_inner_size.set_cross(
-                    dir,
+                let child_cross = if let Some(val) = self.cache(child.node, false).as_ref().and_then(|layout_cache| {
+                    match layout_cache.node_size.cross(dir) {
+                        Defined(val) => {Some(val)}
+                        Undefined => {None}
+                    }
+                }) {
+                    val
+                } else {
+                    let child_cross =
+                        child.size.cross(dir).maybe_max(child.min_size.cross(dir)).maybe_min(child.max_size.cross(dir));
                     self.compute_internal(
                         child.node,
                         Size {
@@ -726,11 +732,11 @@ impl Forest {
                         false,
                         false,
                     )?
-                    .size
-                    .cross(dir)
-                    .maybe_max(child.min_size.cross(dir))
-                    .maybe_min(child.max_size.cross(dir)),
-                );
+                    .size.cross(dir)
+                }
+                .maybe_max(child.min_size.cross(dir))
+                .maybe_min(child.max_size.cross(dir));
+                child.hypothetical_inner_size.set_cross(dir, child_cross);
 
                 child
                     .hypothetical_outer_size
